@@ -1,4 +1,5 @@
-# fantasy_football_api_scraping
+# Fantasy Football API Scraping
+
 Google Apps Script functions for various platforms and functions for Fantasy Football league and player data.
 
 Currently only one function exists:
