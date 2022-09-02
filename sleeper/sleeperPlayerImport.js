@@ -1,6 +1,6 @@
 function sleeperPlayerImport(){
+  // Fetch JSON object from Sleeper's API
   var json = JSON.parse(UrlFetchApp.fetch('https://api.sleeper.app/v1/players/nfl'));
-  Logger.log(JSON.stringify(json))
   
   // Gets spreadsheet and sheet (creates if not existing)
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -13,145 +13,147 @@ function sleeperPlayerImport(){
   // Initial variables -- look at notes to customize
   var arr = [];
   var keys = [];
-  var positions = ['QB','RB','FB','WR','TE','K','DEF'] // remove any positions you're not interested in. Some RBs are categorized as FB.
-  var unrostered = false; // set to 'true' if you want players who are not on NFL teams to be included in table
-  var headers = ['player_id','full_name','last_name','first_name','team','position','fantasy_positions','depth_chart_position','depth_chart_order',
-                 'number','height','weight','college','birth_date','years_exp','status','active','injury_status','injury_start_date','injury_body_part','injury_notes',
-                 'espn_id','yahoo_id','rotowire_id','rotoworld_id','fantasy_data_id','gsis_id','sportradar_id','stats_id','news_updated']; // if you remove one of these entries, remove the corresponding value in the "colWidths" variable and the "colHide" variable
-  var colWidths = [50,170,100,100,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50];
-  var columns = colWidths.length;
-  var colHide = [false,false,false,false,false,true,false,true,false,true,false,false,true,true,true,true,true,false,true,true,true,false,false,true,true,true,true,true,true,true];
-  // Pair of arrays for mapping ESPN defense IDs (these don't come in or aren't present in the JSON from Sleeper) -- should be converted to an object, rather than two arrays
-  var espnId = ['-16022','-16001','-16033','-16002','-16029','-16003','-16004','-16005','-16006','-16007','-16008','-16009','-16034','-16011','-16030','-16012','-16013','-16024','-16014','-16015','-16016','-16017','-16018','-16019','-16020','-16021','-16023','-16025','-16026','-16027','-16010','-16028'];
-  var espnTeams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LV','LAC','LAR','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SF','SEA','TB','TEN','WAS'];
+
+  // remove any positions you're not interested in. Some RBs are categorized as FB and relying on 'fantasy_positions' entails players with multiple designations
+  var positions = ['QB','RB','FB','WR','TE','K','DEF'] 
   
-  // Pair of arrays for modifying injruy tags to shorthand for easier use in a spreadsheet -- also should be converted to an object, rather than two arrays
-  var injuriesAbbr = ['Q','D','O','IR','PUP','COV','NA','SUS','DNR'];
-  var injuries = ['Questionable','Doubtful','Out','IR','PUP','COV','NA','Sus','DNR'];
+  // set to 'true' if you want players who are not on NFL teams to be included in table (will make it take a lot longer)
+  var unrostered = false; 
   
+  // Modify these as needed
+  var dataPoints = {
+    "player_id":{"width":50,"hide":false,"named_range":true},
+    "full_name":{"width":170,"hide":false,"named_range":true},
+    "last_name":{"width":100,"hide":false,"named_range":true},
+    "first_name":{"width":100,"hide":false,"named_range":true},
+    "team":{"width":50,"hide":false,"named_range":true},
+    "position":{"width":50,"hide":true,"named_range":false},
+    "fantasy_positions":{"width":50,"hide":false,"named_range":true},
+    "depth_chart_position":{"width":50,"hide":true,"named_range":false},
+    "depth_chart_order":{"width":50,"hide":false,"named_range":true},
+    "number":{"width":50,"hide":true,"named_range":false},
+    "height":{"width":50,"hide":false,"named_range":true},
+    "weight":{"width":50,"hide":false,"named_range":true},
+    "college":{"width":50,"hide":true,"named_range":false},
+    "birth_date":{"width":50,"hide":false,"named_range":true},
+    "years_exp":{"width":50,"hide":false,"named_range":true},
+    "status":{"width":50,"hide":true,"named_range":false},
+    "active":{"width":50,"hide":true,"named_range":false},
+    "injury_status":{"width":50,"hide":false,"named_range":true},
+    "injury_start_date":{"width":50,"hide":true,"named_range":false},
+    "injury_body_part":{"width":50,"hide":true,"named_range":false},
+    "injury_notes":{"width":50,"hide":true,"named_range":false},
+    "espn_id":{"width":50,"hide":false,"named_range":true},
+    "yahoo_id":{"width":50,"hide":false,"named_range":true},
+    "rotowire_id":{"width":50,"hide":true,"named_range":false},
+    "rotoworld_id":{"width":50,"hide":true,"named_range":false},
+    "fantasy_data_id":{"width":50,"hide":true,"named_range":false},
+    "gsis_id":{"width":50,"hide":true,"named_range":false},
+    "sportradar_id":{"width":50,"hide":true,"named_range":false},
+    "stats_id":{"width":50,"hide":true,"named_range":false},
+    "news_updated":{"width":50,"hide":true,"named_range":false}
+  };
+  // Defense ESPN IDs (Sleeper API lacks these)
+  var espnIds = {
+    "ARI":-16022,"ATL":-16001,"BAL":-16033,"BUF":-16002,"CAR":-16029,"CHI":-16003,"CIN":-16004,"CLE":-16005,"DAL":-16006,"DEN":-16007,"DET":-16008,"GB":-16009,
+    "HOU":-16034,"IND":-16011,"JAX":-16030,"KC":-16012,"LV":-16013,"LAC":-16024,"LAR":-16014,"MIA":-16015,"MIN":-16016,"NE":-16017,"NO":-16018,"NYG":-16019,
+    "NYJ":-16020,"PHI":-16021,"PIT":-16023,"SF":-16025,"SEA":-16026,"TB":-16027,"TEN":-16010,"WAS":-16028
+  };
+  // Injury status shorthand for easier representation in cells
+  var injuries = {
+    "Questionable":"Q",
+    "Doubtful":"D",
+    "Out":"O",
+    "IR":"IR",
+    "PUP":"PUP",
+    "COV":"COV",
+    "NA":"NA",
+    "Sus":"SUS",
+    "DNR":"DNR"
+  }
   
+  // Creates an array of the header values to use
+  var headers = [];
+  for (var a = 0; a < Object.keys(dataPoints).length; a++){
+    headers.push(Object.keys(dataPoints)[a]);
+  }
+  
+  // Sets the header values to the first row of the array 'keys' to be written to the sheet
+  keys.push(headers);
+  
+  // Loops through all 'key' entries (players) in the JSON object that was fetched
   for(var key in json){
     try {
       // First if statement checks if the player is one of the selected positions (other than DEF)
       if ( positions.indexOf(json[key]['position']) >= 0 ) {
         if ( (unrostered == true && json[key]['team'] == null) || json[key]['team'] != null ) {
-          for ( var col in headers) {
-            if ( headers[col] == 'full_name' ) {
+          for ( var col = 0; col < Object.keys(dataPoints).length; col++ ) {
+            if ( Object.keys(dataPoints)[col] == 'full_name' ) {
               // Creates the full name entry alongside the first/last entries in the JSON data
-              arr.push(json[key][headers[3]] + " " + json[key][headers[2]]);            
-            } else if ( headers[col] == 'injury_status') {
-              if ( json[key][headers[col]] == null ) {
-                // Pushes a "G" for "good" to any player without an injury tag
+              arr.push(json[key]['first_name'] + ' ' + json[key]['last_name']);
+            } else if ( json[key]['position'] == 'DEF' && Object.keys(dataPoints)[col] == 'espn_id' ) {
+              // Adds ESPN id
+              arr.push(espnIds[json[key]['player_id']]);
+            } else if ( Object.keys(dataPoints)[col] == 'injury_status') {
+              if ( json[key][Object.keys(dataPoints)[col]] == null ) {
+                // Pushes a 'G' for 'good' to any player without an injury tag
                 arr.push('G');
               } else {
                 // If player has injury designation, assigns the shorthand to that player
-                arr.push(injuriesAbbr[injuries.indexOf(json[key][headers[col]])]);
+                arr.push(injuries[json[key][Object.keys(dataPoints)[col]]]);
               }
-            } else if ( json[key][headers[col]] != null ) {
+            } else if ( json[key][Object.keys(dataPoints)[col]] != null ) {
               // Once the above conditions are not met, this part cycles through all the values in the 'headers' array above
-              arr.push(json[key][headers[col]]);
+              arr.push(json[key][Object.keys(dataPoints)[col]]);
             } else {
               // If there is a null value, it pushes a blank entry to the array
-              arr.push("");
+              arr.push('');
             }
           }    
-        }
-      // Else statement for defenses
-      } else if ( positions.indexOf('DEF') >= 0 && json[key]['position'] == 'DEF' && espnTeams.indexOf(json[key]['player_id']) > 0) {
-        for ( var col in headers) {
-          if ( headers[col] == 'espn_id' ) {
-            // Adds ESPN id
-            arr.push(espnId[espnTeams.indexOf(json[key]['player_id'])]);
-          } else if ( headers[col] == 'full_name' ) {
-            // Adds city/mascot single entry
-            arr.push(json[key][headers[3]] + " " + json[key][headers[2]]);   
-          } else if ( headers[col] == 'injury_status') {
-            // Gives a 'G', 'good', health status for each defense
-            if ( json[key][headers[col]] == null ) {
-              arr.push('G');
-            } else {
-              arr.push(injuriesAbbr[injuries.indexOf(json[key][headers[col]])]);
-            }
-          } else if ( json[key][headers[col]] != null ) {
-            // Once the above conditions are not met, this part cycles through all the values in the 'headers' array above
-            arr.push(json[key][headers[col]]);
-          } else {
-            // If there is a null value, it pushes a blank entry to the array
-            arr.push("");
-          }
         }
       }
       if (arr.length > 0) {
         // so long as the array mapped values, it pushes the array into the array ('keys') of arrays
         keys.push(arr);
         // resets the 'arr' variable to start over
-        arr = []; 
+        arr = [];
       }
     } catch (err) {
       ss.toast('Error bringing in data')
     }
   }
-  
-  // WEIRD ISSUE WITH ARI DEFENSE
-  for ( var col in headers) {
-    if ( headers[col] == 'espn_id' ) {
-      arr.push(espnId[espnTeams.indexOf(json['ARI']['player_id'])]);
-    } else if ( headers[col] == 'full_name' ) {
-      arr.push(json['ARI'][headers[3]] + " " + json['ARI'][headers[2]]);   
-    } else if ( headers[col] == 'injury_status') {
-            if ( json[key][headers[col]] == null ) {
-              arr.push('G');
-            } else {
-              arr.push(injuriesAbbr[injuries.indexOf(json[key][headers[col]])]);
-            }
-    } else if ( json['ARI'][headers[col]] != null ) {
-      arr.push(json['ARI'][headers[col]]);
-    } else {
-      arr.push("");
-    }
-  }
-  keys.push(arr);
 
   // Clear the sheet for new data
   sheet.clear();
-  // Gets range and sets values of the headers
-  sheet.getRange(1,1,1,headers.length).setValues([headers]);
-  // Gets range for setting data
-  var playerTable = sheet.getRange(2,1,keys.length,keys[0].length);
+  // Gets range for setting data and headers
+  var playerTable = sheet.getRange(1,1,keys.length,keys[0].length);
   // Sets data in place
   playerTable.setValues(keys);
   // Sorts based on 
-  playerTable.sort([{column: headers.indexOf('fantasy_positions')+1, ascending: true},{column: headers.indexOf('last_name')+1, ascending: true}]);
-
-  // Creates named ranges for doing VLOOKUP functions in Google Sheets, among other things
-  ss.setNamedRange('PLAYER_ID',sheet.getRange(2,headers.indexOf('player_id')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_FULL',sheet.getRange(2,headers.indexOf('full_name')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_FIRST',sheet.getRange(2,headers.indexOf('first_name')+1,keys.length,1));  
-  ss.setNamedRange('PLAYER_LAST',sheet.getRange(2,headers.indexOf('last_name')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_POSITION',sheet.getRange(2,headers.indexOf('fantasy_positions')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_TEAM',sheet.getRange(2,headers.indexOf('team')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_DEPTH',sheet.getRange(2,headers.indexOf('depth_chart_order')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_HEIGHTS',sheet.getRange(2,headers.indexOf('height')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_WEIGHTS',sheet.getRange(2,headers.indexOf('weight')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_EXPERIENCE',sheet.getRange(2,headers.indexOf('years_exp')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_BIRTHDAYS',sheet.getRange(2,headers.indexOf('birth_date')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_INJURY',sheet.getRange(2,headers.indexOf('injury_status')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_ESPN',sheet.getRange(2,headers.indexOf('espn_id')+1,keys.length,1));
-  ss.setNamedRange('PLAYER_FANTASY_DATA_ID',sheet.getRange(2,headers.indexOf('fantasy_data_id')+1,keys.length,1));
-
-  // Hides columns and aligns data in cells
-  for (var cols = 0 ; cols < columns ; cols++) {
-    sheet.setColumnWidth(cols+1,colWidths[cols]);
-    if (colHide[cols] == true){
-      sheet.hideColumns(cols+1,1);
-    } else {
-      sheet.unhideColumn(sheet.getRange(1,cols+1,sheet.getMaxRows(),1));
+  sheet.getRange(2,1,keys.length-1,keys[0].length).sort([{column: headers.indexOf('fantasy_positions')+1, ascending: true},{column: headers.indexOf('last_name')+1, ascending: true}]);
+  
+  // Creates named ranges for doing VLOOKUP functions in Google Sheets; only for keys in 'headers' object tagged with 'true' for 'named_range'
+  for ( col = 0; col < Object.keys(dataPoints).length; col++ ) {
+    if (dataPoints[Object.keys(dataPoints)[col]]['named_range'] == true) {
+      ss.setNamedRange('SLPR_' + headers[col].toUpperCase(),sheet.getRange(2,col+1,keys.length-1,1));
     }
   }
-  var alignments = sheet.getRange(1,1,keys.length+1,keys[0].length);
-  alignments.setHorizontalAlignment('left');
 
+  // Hides columns and aligns data in cells
+  for (var col = 0; col < Object.keys(dataPoints).length; col++ ) {
+    sheet.setColumnWidth(col+1,dataPoints[Object.keys(dataPoints)[col]]['width']);
+    if (dataPoints[Object.keys(dataPoints)[col]]['hide'] == true){
+      sheet.hideColumns(col+1,1);
+    } else {
+      sheet.unhideColumn(sheet.getRange(1,col+1,sheet.getMaxRows(),1));
+    }
+  }
+  
+  // Notification text creation
   var positionsString = '';
+  if (positions.indexOf('FB') >= 0) {
+    positions.splice(positions.indexOf('FB'),1);
+  }
   for (var a = 0; a < positions.length; a++) {
     if (positions[a+1] == undefined) {
       positionsString = positionsString.concat('and ' + positions[a]);
@@ -159,8 +161,45 @@ function sleeperPlayerImport(){
       positionsString = positionsString.concat(positions[a] + ', ');
     }
   }
-  ss.toast('All Sleeper player data imported successfully for ' + positionsString )
+  ss.toast('All Sleeper player data imported successfully for ' + positionsString);
 
+  // Update for correct rows
+  var maxRows = sheet.getMaxRows();
+  var rows = keys.length;
+  if (maxRows != rows) {
+    try { 
+      var lastRow = sheet.getLastRow();
+      if (rows > maxRows) {
+        sheet.insertRowsAfter(maxRows,rows-maxRows);
+      } else if (lastRow < maxRows){
+        sheet.deleteRows(lastRow+1, maxRows-lastRow);
+      }
+    } catch (err) {
+      Logger.log('Error or the sheet is already sized correctly for rows')
+    }
+  }
+  // Update for correct columns
+  var maxCols = sheet.getMaxColumns();
+  var columns = keys[0].length;
+  if (maxCols != columns) {
+    try { 
+      var lastCol = sheet.getLastColumn();
+      if (columns > maxCols) {
+        sheet.insertColumnsAfter(maxCols,columns-maxCols);
+      } else if (lastCol < maxCols){
+        sheet.deleteColumns(lastCol+1, maxCols-lastCol);
+      }
+    } catch (err) {
+      Logger.log('Error or the sheet is already sized correctly for columns')
+    }
+  }
+
+  var alignments = sheet.getRange(1,1,keys.length,keys[0].length);
+  alignments.setHorizontalAlignment('left');
+
+  // Locks data on sheet
+  sheet.protect();
+  
   // 2022 - Created by Ben Powers
   // ben.powers.creative@gmail.com
 
