@@ -22,54 +22,55 @@ function sleeperPlayerImport(){
   
   // Modify these as needed
   var dataPoints = {
-    "player_id":{"width":50,"hide":false,"named_range":true},
-    "full_name":{"width":170,"hide":false,"named_range":true},
-    "last_name":{"width":100,"hide":false,"named_range":true},
-    "first_name":{"width":100,"hide":false,"named_range":true},
-    "team":{"width":50,"hide":false,"named_range":true},
-    "position":{"width":50,"hide":true,"named_range":false},
-    "fantasy_positions":{"width":50,"hide":false,"named_range":true},
-    "depth_chart_position":{"width":50,"hide":true,"named_range":false},
-    "depth_chart_order":{"width":50,"hide":false,"named_range":true},
-    "number":{"width":50,"hide":true,"named_range":false},
-    "height":{"width":50,"hide":false,"named_range":true},
-    "weight":{"width":50,"hide":false,"named_range":true},
-    "college":{"width":50,"hide":true,"named_range":false},
-    "birth_date":{"width":50,"hide":false,"named_range":true},
-    "years_exp":{"width":50,"hide":false,"named_range":true},
-    "status":{"width":50,"hide":true,"named_range":false},
-    "active":{"width":50,"hide":true,"named_range":false},
-    "injury_status":{"width":50,"hide":false,"named_range":true},
-    "injury_start_date":{"width":50,"hide":true,"named_range":false},
-    "injury_body_part":{"width":50,"hide":true,"named_range":false},
-    "injury_notes":{"width":50,"hide":true,"named_range":false},
-    "espn_id":{"width":50,"hide":false,"named_range":true},
-    "yahoo_id":{"width":50,"hide":false,"named_range":true},
-    "rotowire_id":{"width":50,"hide":true,"named_range":false},
-    "rotoworld_id":{"width":50,"hide":true,"named_range":false},
-    "fantasy_data_id":{"width":50,"hide":true,"named_range":false},
-    "gsis_id":{"width":50,"hide":true,"named_range":false},
-    "sportradar_id":{"width":50,"hide":true,"named_range":false},
-    "stats_id":{"width":50,"hide":true,"named_range":false},
-    "news_updated":{"width":50,"hide":true,"named_range":false}
+    'player_id':{'width':50,'hide':false,'named_range':true},
+    'full_name':{'width':170,'hide':false,'named_range':true},
+    'last_name':{'width':100,'hide':false,'named_range':true},
+    'first_name':{'width':100,'hide':false,'named_range':true},
+    'team':{'width':50,'hide':false,'named_range':true},
+    'height':{'width':50,'hide':false,'named_range':true},
+    'weight':{'width':50,'hide':false,'named_range':true},
+    'age':{'width':50,'hide':false,'named_range':true},
+    'birth_date':{'width':50,'hide':false,'named_range':true},
+    'years_exp':{'width':50,'hide':false,'named_range':true},
+    'position':{'width':50,'hide':true,'named_range':false},
+    'fantasy_positions':{'width':50,'hide':false,'named_range':true},
+    'depth_chart_position':{'width':50,'hide':true,'named_range':false},
+    'depth_chart_order':{'width':50,'hide':false,'named_range':true},
+    'number':{'width':50,'hide':true,'named_range':false},
+    'college':{'width':50,'hide':true,'named_range':false},
+    'status':{'width':50,'hide':true,'named_range':false},
+    'active':{'width':50,'hide':true,'named_range':false},
+    'injury_status':{'width':50,'hide':false,'named_range':true},
+    'injury_start_date':{'width':50,'hide':true,'named_range':false},
+    'injury_body_part':{'width':50,'hide':true,'named_range':false},
+    'injury_notes':{'width':50,'hide':true,'named_range':false},
+    'espn_id':{'width':50,'hide':false,'named_range':true},
+    'yahoo_id':{'width':50,'hide':false,'named_range':true},
+    'rotowire_id':{'width':50,'hide':true,'named_range':false},
+    'rotoworld_id':{'width':50,'hide':true,'named_range':false},
+    'fantasy_data_id':{'width':50,'hide':false,'named_range':true},
+    'gsis_id':{'width':50,'hide':true,'named_range':false},
+    'sportradar_id':{'width':50,'hide':true,'named_range':false},
+    'stats_id':{'width':50,'hide':true,'named_range':false},
+    'news_updated':{'width':50,'hide':true,'named_range':false}
   };
   // Defense ESPN IDs (Sleeper API lacks these)
   var espnIds = {
-    "ARI":-16022,"ATL":-16001,"BAL":-16033,"BUF":-16002,"CAR":-16029,"CHI":-16003,"CIN":-16004,"CLE":-16005,"DAL":-16006,"DEN":-16007,"DET":-16008,"GB":-16009,
-    "HOU":-16034,"IND":-16011,"JAX":-16030,"KC":-16012,"LV":-16013,"LAC":-16024,"LAR":-16014,"MIA":-16015,"MIN":-16016,"NE":-16017,"NO":-16018,"NYG":-16019,
-    "NYJ":-16020,"PHI":-16021,"PIT":-16023,"SF":-16025,"SEA":-16026,"TB":-16027,"TEN":-16010,"WAS":-16028
+    'ARI':-16022,'ATL':-16001,'BAL':-16033,'BUF':-16002,'CAR':-16029,'CHI':-16003,'CIN':-16004,'CLE':-16005,'DAL':-16006,'DEN':-16007,'DET':-16008,'GB':-16009,
+    'HOU':-16034,'IND':-16011,'JAX':-16030,'KC':-16012,'LV':-16013,'LAC':-16024,'LAR':-16014,'MIA':-16015,'MIN':-16016,'NE':-16017,'NO':-16018,'NYG':-16019,
+    'NYJ':-16020,'PHI':-16021,'PIT':-16023,'SF':-16025,'SEA':-16026,'TB':-16027,'TEN':-16010,'WAS':-16028
   };
   // Injury status shorthand for easier representation in cells
   var injuries = {
-    "Questionable":"Q",
-    "Doubtful":"D",
-    "Out":"O",
-    "IR":"IR",
-    "PUP":"PUP",
-    "COV":"COV",
-    "NA":"NA",
-    "Sus":"SUS",
-    "DNR":"DNR"
+    'Questionable':'Q',
+    'Doubtful':'D',
+    'Out':'O',
+    'IR':'IR',
+    'PUP':'PUP',
+    'COV':'COV',
+    'NA':'NA',
+    'Sus':'SUS',
+    'DNR':'DNR'
   }
   
   // Creates an array of the header values to use
@@ -106,8 +107,17 @@ function sleeperPlayerImport(){
               // Once the above conditions are not met, this part cycles through all the values in the 'headers' array above
               arr.push(json[key][Object.keys(dataPoints)[col]]);
             } else {
-              // If there is a null value, it pushes a blank entry to the array
-              arr.push('');
+              if (Object.keys(dataPoints)[col] == 'espn_id') {
+                rookieId = espnRookieId(json[key]['player_id']);
+                if (rookieId != null){
+                  arr.push(rookieId);
+                } else {
+                  arr.push('');
+                }
+              } else {
+                // If there is a null value, it pushes a blank entry to the array
+                arr.push('');
+              }
             }
           }    
         }
