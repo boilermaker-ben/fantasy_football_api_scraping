@@ -99,8 +99,6 @@
  * 
  * fantasyProsWeeklyProjections(ppr) 
  * 
- * footballersProjectionFetch(ppr)
- * 
  * fanduelProjectionFetch(justPoints) - Input to return additional object details but "justPoints" is triggered by default to return player IDs with matching points
  * 
  * ESPN =================================================================================
@@ -347,10 +345,6 @@ function espnProjectionFetch(ppr,year,week) {
 
 function fantasyProsWeeklyProjections(ppr) {
   return FantasyFunctions.fantasyProsProjectionFetch(ppr);
-}
-
-function footballersProjectionFetch(ppr) {
-  return FantasyFunctions.footballersProjectionFetch(ppr);
 }
 
 function fanduelProjectionFetch() {
