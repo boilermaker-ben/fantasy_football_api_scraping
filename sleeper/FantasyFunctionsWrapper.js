@@ -1,10 +1,5 @@
-/*
 
-USE THIS ID:
-
-1E23Ya_LoiS-q3BNI9vACjQPmJReR33ZqFP-VOezWjh87KXlmzg6KF8Mb
-
-COPY THIS:
+// MY FUNCTION ID: 1E23Ya_LoiS-q3BNI9vACjQPmJReR33ZqFP-VOezWjh87KXlmzg6KF8Mb
 
 /** FANTASY FUNCTIONS - 12.09.2025
  * 
@@ -179,7 +174,7 @@ COPY THIS:
  * FIRST DOWN STUDIO FUNCTIONS =======================================================================
  * 
  * firstDownProjectionFetch(ppr) - fetches object of player projections for QB, RB, WR, TE from FirstDown.Studio, only available after Wednesday evening, usually; provide 0, 0.5, or 1 as input to get specific ppr format
- *  <---PUT BACKSLASH HERE!
+ */
 
 function sleeperScoring(ppr) {
   return FantasyFunctions.leagueScoring(ppr);
