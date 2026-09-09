@@ -96,8 +96,6 @@
  * 
  * fantasyProsWeeklyProjections(details) - normally just provides projections, but "details" being present gives matching and other info as part of object 
  * 
- * footballersProjectionFetch(ppr)
- * 
  * fanduelProjectionFetch(justPoints) - Input to return additional object details but "justPoints" is triggered by default to return player IDs with matching points
  * 
  * ESPN =================================================================================
@@ -4116,13 +4114,6 @@ function projectionLoggingAll(ppr){
   catch (err){
     Logger.log('Fantasy Data Failed ' + err.stack)
   }
-  try{
-    Logger.log('Fetching projections from Fantasy Footballers...');
-    projectionLogging('FF',ppr,year,week,);
-  }
-  catch (err){
-    Logger.log('FF Failed ' + err.stack)
-  }
 }
 
 //-------------------------------------------------------------
@@ -4156,10 +4147,6 @@ function projectionLogging(platform,ppr,year,week) {
       break;      
     case 'FIRSTDOWN':
       arr = [firstDownProjectionFetch(ppr,true)];
-      break;
-    case 'FF':
-      arr = footballersProjectionFetch(ppr);
-      arrNames = ['FF_A','FF_J','FF_M','FF_AVG'];
       break;
     case null:
       ss.toast('No format/source provided');
@@ -4649,73 +4636,6 @@ function fantasyProsProjectionFetch(format) {
   return obj;
 }
 */
-
-//-------------------------------------------------------------
-// FUNCTION TO FETCH OBJECT OF FOOTBALLERS PROJECTIONS - Provide analyst name ('Andy','Jason','Mike',or 'Avg') or entering nothing will return average
-function footballersProjectionFetch(ppr,year,week) {
-  const sleeper = Object.values(JSON.parse(UrlFetchApp.fetch('https://api.sleeper.app/v1/players/nfl')));
-  const scoring = sleeperScoring(ppr);
-  const conversion = {
-      'pass_att':'passing_attempts',
-      'pass_cmp':'passing_completions',
-      'pass_yd':'passing_yards',
-      'pass_td':'passing_touchdowns',
-      'pass_int':'interceptions_thrown',
-      'rec_yd':'receiving_yards',
-      'rec_ypr':'receiving_yards_per_reception',
-      'rec_td':'receiving_touchdowns',
-      'rec':'receptions',
-      'rush_att':'rushing_attempts',
-      'rush_ypa':'rushing_yards_per_attempt',
-      'rush_yd':'rushing_yards',
-      'rush_td':'rushing_touchdowns',
-      'fum_lost':'fumbles_lost'
-    };
-  const footballersScoring = {};
-  Object.keys(scoring).forEach(key => {
-    footballersScoring[conversion[key]] = scoring[key]; 
-  });
-
-  let projections = JSON.parse(String(UrlFetchApp.fetch(`https://thefantasyfootballers.com/${year}-quarterback-rankings/`).getContentText().match(/(?<=window\.udk\.data\ \=\ ).+(?=\,\"essentials\")/g) + '}')).projections;
-  
-  //let full = text.match(/((((\[\{\"player_id).+(\}\])(?=\,\"previous)))|((\[\{\"player_id).+(\}\])(?=\}\;)))/g);
-  let objA = {}, objJ = {}, objM = {}, objAvg = {};
-  let missing = [];
-  let ids = [];
-  for (let a = 0; a < projections.length; a++) {
-    let projection = 0;
-    let id = null;
-    try {
-      id = sleeper.filter(x => x.fantasy_data_id == projections[a].player_id)[0].player_id;
-    } catch (err) {
-      if (id == undefined || id == null) {
-        id = NAMES_TO_SLEEPER_ID[projections[a].name];
-      }
-    }
-    if (id != null) {
-      ids.push(id);
-      Object.keys(projections[a]).forEach(key => {
-        if (footballersScoring.hasOwnProperty(key)) {
-          projection = projection + (footballersScoring[key] * projections[a][key]);
-        }
-      });
-      projection = Number.parseFloat(projection).toFixed(2);
-      projections[a].analyst_name == 'Andy' ? objA[id] = projection : 
-      projections[a].analyst_name == 'Jason' ? objJ[id] = projection : 
-      projections[a].analyst_name == 'Mike' ? objM[id] = projection : null;
-
-    } else {
-      missing.indexOf(projections[a]['name']) < 0 ? missing.push(projections[a]['name']) : null;
-    }
-  }
-  
-  missing.length > 0 ? Logger.log('Footballers - No ID match found for: ' + missing) : null;  
-  for (let a = 0; a < ids.length; a++) {
-    let projections = [Number.parseFloat(objA[ids[a]]), Number.parseFloat(objJ[ids[a]]), Number.parseFloat(objM[ids[a]])].filter(x => x != null);
-    objAvg[ids[a]] = Number.parseFloat(projections.reduce((a, b) => a + b, 0) / projections.length).toFixed(2);
-  }
-  return [objA,objJ,objM,objAvg];
-}
 
 //-------------------------------------------------------------
 // FUNCTION TO FETCH FANTASYDATA PROJECTIONS FOR CURRENT WEEK
